@@ -1,0 +1,148 @@
+/* -------------------  MOBILE  --------------------- */
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-family: Arial;
+    min-height: 100vh;
+}
+
+header {
+    display: flex;
+    position: fixed;
+    width: 100vw;
+    padding: 10px 20px 10px 20px;
+    background-color: rgb(33, 37, 41);
+    color: white;
+}
+
+.menu a {
+    margin-right: 20px;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    cursor: pointer;
+}
+
+.menu a:hover {
+    font-weight: bold;
+}
+
+.dropdown {
+    position: relative;
+    display: none;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #ddd
+}
+
+.show {
+    display: block;
+}
+
+main {
+    flex: 1;
+    padding: 0 20px 20px 20px;
+    margin-top: 40px;
+}
+
+.manifests {
+    font-family: Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+}
+
+.manifests td,
+.manifests th {
+    border: 1px solid #ddd;
+    padding: 4px;
+}
+
+.manifests tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.manifests tr:hover {
+    background-color: #ddd;
+}
+
+.manifests th {
+    text-align: left;
+    background-color: #04aa6d;
+    color: white;
+}
+
+.manifests td {
+    width: 80%;
+}
+
+.photos img {
+    width: calc((100% - 15px) / 4);
+    margin: 5px 5px 0 0;
+    border: #04aa6d solid 2px;
+}
+
+.photos img:nth-child(4n) {
+    margin: 5px 0 0 0;
+}
+
+
+/* -------------------  LARGE SCREENS  -------------- */
+
+@media (max-width: 1824px) {
+    .photos img {
+        width: calc((100% - 15px) / 4);
+        margin: 5px 5px 0 0;
+        border: #04aa6d solid 2px;
+    }
+    .photos img:nth-child(4n) {
+        margin: 5px 0 0 0;
+    }
+}
+
+
+/* -------------------  DESKTOP  -------------------- */
+
+@media (max-width: 1224px) {
+    .photos img {
+        width: calc((100% - 5px) / 2);
+        margin: 5px 5px 0 0;
+        border: chocolate solid 2px;
+    }
+    .photos img:nth-child(2n) {
+        margin: 5px 0 0 0;
+    }
+}
+
+
+/* -------------------  TABLET  --------------------- */
+
+@media (max-width: 768px) {
+    .photos img {
+        width: 100%;
+        margin: 5px 0 0 0;
+        border: chartreuse solid 2px;
+    }
+    .menu {
+        display: none;
+    }
+    .dropdown {
+        display: inline-block;
+    }
+}
