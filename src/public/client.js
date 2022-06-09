@@ -16,7 +16,7 @@ const updateStore = (state, newState) => {
 
 /**
  * render body
- * @param {Element} root main element
+ * @param {HTMLBodyElement} root main element
  * @param {store} state current store
  */
 const render = async(root, state) => {
@@ -29,15 +29,11 @@ const render = async(root, state) => {
  * @returns {string} body context
  */
 const App = (state) => {
-  return `
-        <header>
-          ${renderHeader(state)}
-        </header>
-        <main>
-          ${renderMain(state)}
-        </main>
-        <footer></footer>
-    `;
+  const renderBody = swithBody(state);
+  const createHeader = createContext("<header>", "</header>", renderHeader);
+  const createBody = createContext("<main>", "</main>", renderBody);
+
+  return createHeader([state]) + createBody([state]);
 };
 
 /**
@@ -60,73 +56,83 @@ window.addEventListener("load", () => {
 
 // ------------------------------------------------------  COMPONENTS
 
+
 /**
- * render header context
- * @param {store} state
- * @returns {string} header context
+ * @description createContext
+ * @param {string} startTag
+ * @param {string} endTag
+ * @param {Function} fnCreate
+ * @returns {string} context
  */
-const renderHeader = (state) => {
-  const rovers = state.get("rovers");
+const createContext = function(startTag, endTag, fnRender) {
+  return function(args) {
+    const contextList = [];
 
-  const f = (context) => (rover) => {
-    context.push(`<a onclick=swithMenu('${rover.name}')>${rover.name}</a>`);
+    contextList.push(startTag);
+
+    if (args == null || args.length === 0) {
+      contextList.push(`<a>Loading...</a>`);
+    } else {
+      args.forEach((e) => {
+        contextList.push(fnRender.call(e));
+      });
+    }
+
+    contextList.push(endTag);
+    return contextList.join("");
   };
-
-  const dropdownList = [
-    `<div class="dropdown">`,
-    `<a onclick=document.getElementById("myDropdown").classList.toggle("show")>▦</a>`,
-    `<div id="myDropdown" class="dropdown-content">`,
-  ];
-
-  const menuList = [
-    `<div class="menu">`,
-    `<a onclick=swithMenu('home')>Home</a>`,
-  ];
-
-  if (rovers.size === 0) {
-    menuList.push(loadRovers(state));
-  }
-
-  rovers.forEach(f(menuList));
-  rovers.forEach(f(dropdownList));
-
-  menuList.push(`</div>`);
-  dropdownList.push(`</div>`, `</div>`);
-
-  const dropdownContext = dropdownList.join(``);
-  const menuContext = menuList.join(``);
-
-  return dropdownContext + menuContext;
 };
 
 /**
- * render main context
- * @param {store} state
- * @returns {string} main context
+ * render header context
+ * @returns {string} header context
  */
-const renderMain = (state) => {
+const renderHeader = function() {
+  const rovers = this.get("rovers").toArray();
+
+  if (rovers.length === 0) {
+    loadRovers(this);
+  }
+
+  const fnRender = function() { return `<a onclick=swithMenu('${this.name}')>${this.name}</a>`; }
+
+  const createMenuDesktop = createContext(
+    `<div class="menu"><a onclick=swithMenu('home')>Home</a>`, `</div>`,
+    fnRender
+  );
+
+  const createMenuMobile = createContext(
+    `<div class="dropdown"><a onclick=document.getElementById("myDropdown").classList.toggle("show")>▦</a>
+      <div id="myDropdown" class="dropdown-content">`, `</div></div>`, fnRender
+  );
+
+  const menuDesktop = createMenuDesktop(rovers);
+  const menuMobile = createMenuMobile(rovers);
+
+  return menuDesktop + menuMobile;
+};
+
+/**
+ * return function render home or rover
+ * @param {store} state
+ * @returns {Function} main context
+ */
+const swithBody = (state) => {
   const menu = state.get("menu");
 
   if (menu === "home") {
-    return renderHome(state);
+    return renderHome;
   }
 
-  const rovers = state.get("rovers");
-  const rover = rovers.find((x) => x.name === menu);
-  if (rover == null) {
-    return `<h3>rover not found<h3>`;
-  }
-
-  return renderRover(state, rover);
+  return renderRover;
 };
 
 /**
  * render gallery context
- * @param {store} state list rovers
  * @returns {string} gallery context
  */
-const renderHome = (state) => {
-  const apod = state.get("apod");
+const renderHome = function() {
+  const apod = this.get("apod");
 
   return `<section>
     <h3>APOD</h3>
@@ -144,15 +150,23 @@ const renderHome = (state) => {
 
 /**
  * render rover context
- * @param {object} rover infomaion
  * @returns {string} rover context
  */
-const renderRover = (state, rover) => {
+const renderRover = function() {
+  const menu = this.get("menu");
+  const rovers = this.get("rovers");
+  const rover = rovers.find((x) => x.name === menu);
+
+  if (rover == null) {
+    return `<a>rover not found<a>`;
+  }
+
   const { manifests, photos } = rover;
+
   if (manifests == null) {
-    loadManifests(state, rover);
+    loadManifests(this, rover);
   } else if (photos == null) {
-    loadPhotos(state, rover);
+    loadPhotos(this, rover);
   }
 
   return `${renderTitle(manifests)} ${renderPhotos(photos)}`;
@@ -160,7 +174,7 @@ const renderRover = (state, rover) => {
 
 const renderTitle = (manifests) => {
   if (manifests == null) {
-    return `<h3>Loading...</h3>`;
+    return `<a>Loading...</a>`;
   }
 
   return `<section>
@@ -178,19 +192,14 @@ const renderTitle = (manifests) => {
 };
 
 const renderPhotos = (photos) => {
-  if (photos == null) {
-    return `<h3>Loading...</h3>`;
-  }
+  const fnRender = function() { return `<img src="${this.src}" alt="..." loading="lazy">`; }
 
-  const f = (content) => (photo) => {
-    content.push(`<img src="${photo.src}" alt="..." loading="lazy">`);
-  };
+  const createListImage = createContext(
+    `<section class="photos">`, `</section>`,
+    fnRender
+  );
 
-  const content = [`<section class="photos">`];
-  photos.forEach(f(content));
-  content.push(`</section>`);
-
-  return content.join(``);
+  return createListImage(photos);
 };
 
 // Example of a pure function that renders infomation requested from the backend
@@ -245,8 +254,6 @@ const loadRovers = (state) => {
       );
       updateStore(state, { rovers });
     });
-
-  return `<a>Loading...</a>`;
 };
 
 /**
@@ -277,7 +284,7 @@ const loadManifests = (state, rover) => {
         status,
         total_photos,
       };
-      updateStore(state, state);
+      loadPhotos(state, rover);
     });
 };
 
